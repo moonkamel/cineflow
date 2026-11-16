@@ -40,6 +40,7 @@ export function WatchView({
           externalUrl={video.externalUrl}
           title={title}
           poster={backdrop ?? null}
+          autoLoad={true}
         />
       </div>
 
