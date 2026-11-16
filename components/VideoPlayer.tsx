@@ -18,16 +18,6 @@ interface Props {
 
 const LOAD_TIMEOUT_MS = 12_000;
 
-/**
- * Lazy, sandboxed iframe player.
- *
- * Performance: renders a lightweight poster "facade" first, so the heavy
- * third-party iframe (≈500 KB+ of JS for YouTube) never competes with the
- * LCP. The 16:9 box is reserved up front → CLS = 0.
- *
- * Security: `sandbox` only grants what an embedded player needs. Notably it
- * omits `allow-top-navigation`, so the embed can never redirect the page.
- */
 export function VideoPlayer({ embedUrl, externalUrl, poster, title, autoLoad = false }: Props) {
   const [active, setActive] = useState(false);
   const [state, setState] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -58,7 +48,20 @@ export function VideoPlayer({ embedUrl, externalUrl, poster, title, autoLoad = f
     return () => window.clearTimeout(t);
   }, [state]);
 
-  const src = embedUrl && `${embedUrl}${embedUrl.includes("?") ? "&" : "?"}autoplay=${autoLoad ? 0 : 1}&rel=0&modestbranding=1`;
+  // Construction de l'URL : on sépare les params YouTube des params VidSrc
+  let src = embedUrl;
+  if (src) {
+    const separator = src.includes("?") ? "&" : "?";
+    const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
+    const autoPlayParam = autoLoad ? 1 : 0; // CORRIGÉ : 1 si autoLoad, sinon 0
+    
+    if (isYouTube) {
+      src = `${src}${separator}autoplay=${autoPlayParam}&rel=0&modestbranding=1`;
+    } else {
+      // Pour VidSrc, on ajoute uniquement l'autoplay
+      src = `${src}${separator}autoplay=${autoPlayParam}`;
+    }
+  }
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-2xl">
@@ -71,7 +74,7 @@ export function VideoPlayer({ embedUrl, externalUrl, poster, title, autoLoad = f
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen
           referrerPolicy="strict-origin-when-cross-origin"
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+          // SUPPRIMÉ : sandbox (bloque VidSrc)
           onLoad={() => setState("ready")}
         />
       )}
