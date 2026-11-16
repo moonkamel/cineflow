@@ -21,12 +21,23 @@ const KEYS: Record<Format, string | undefined> = {
   "728x90": process.env.NEXT_PUBLIC_ADSTERRA_BANNER_728X90_KEY,
 };
 
+/**
+ * Adsterra serves banners from per-account domains. Copy the part of the
+ * second <script src> before the key, e.g. "https://example-domain.org/22".
+ * Unset → Adsterra's legacy CDN pattern.
+ */
+const BANNER_BASE = process.env.NEXT_PUBLIC_ADSTERRA_BANNER_BASE?.replace(/\/$/, "");
+const bannerSrc = (key: string) =>
+  BANNER_BASE
+    ? `${BANNER_BASE}/${encodeURIComponent(key)}`
+    : `https://www.highperformanceformat.com/${encodeURIComponent(key)}/invoke.js`;
+
 const SIZE: Record<Format, [number, number]> = { "300x250": [300, 250], "728x90": [728, 90] };
 
 function bannerDoc(key: string, w: number, h: number) {
   return `<!doctype html><html><head><meta name="referrer" content="no-referrer-when-downgrade"><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style></head><body>
 <script>atOptions={key:${JSON.stringify(key)},format:"iframe",height:${h},width:${w},params:{}};</script>
-<script src="https://www.highperformanceformat.com/${encodeURIComponent(key)}/invoke.js"></script>
+<script src="${bannerSrc(key)}"></script>
 </body></html>`;
 }
 

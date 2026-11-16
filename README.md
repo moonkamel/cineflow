@@ -89,6 +89,7 @@ Créer chaque unité dans le tableau de bord Adsterra (*Websites → Add code*),
 | Social Bar | `NEXT_PUBLIC_ADSTERRA_SOCIAL_BAR_SRC` | URL `src` du `<script>` fourni | Tout le site, chargé quand le navigateur est inactif |
 | Popunder | `NEXT_PUBLIC_ADSTERRA_POPUNDER_SRC` | URL `src` du `<script>` | Activé seulement après un clic « Play » |
 | Bannière 300×250 | `NEXT_PUBLIC_ADSTERRA_BANNER_300X250_KEY` | valeur `key` dans `atOptions` | Barre latérale fiche/lecteur, mobile |
+| Base des bannières | `NEXT_PUBLIC_ADSTERRA_BANNER_BASE` | `src` du 2e `<script>` **sans** la clé (ex. `https://xxxx.org/22`) | — |
 | Bannière 728×90 | `NEXT_PUBLIC_ADSTERRA_BANNER_728X90_KEY` | valeur `key` dans `atOptions` | Entre les rangées, sous le lecteur (desktop) |
 
 Notes :
