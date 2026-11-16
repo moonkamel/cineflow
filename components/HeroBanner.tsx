@@ -46,7 +46,7 @@ export function HeroBanner({ item }: { item: MediaSummary }) {
           <p className="mt-4 line-clamp-3 text-sm text-white/85 md:text-base">{truncate(item.overview, 220)}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href={watchPath(type, item.id, title)} className={buttonClass("white", "lg")}>
-              <Play className="fill-current" /> Play Trailer
+              <Play className="fill-current" /> Watch Now
             </Link>
             <Link href={pathFor(item)} className={buttonClass("secondary", "lg")}>
               <Info /> More Info
