@@ -96,7 +96,7 @@ export default async function TvPage({ params }: Props) {
         <div className="min-w-0 space-y-10">
           <CastList cast={tv.credits?.cast ?? []} />
           <WhereToWatch region={tv["watch/providers"]?.results.US} title={tv.name} />
-          <Faq items={titleFaq(tv.name, "tv", tv["watch/providers"]?.results.US)} />
+          <Faq items={titleFaq(tv.name, "show", tv["watch/providers"]?.results.US)} />
         </div>
         <aside className="space-y-6">
           <AdSlot format="300x250" />
