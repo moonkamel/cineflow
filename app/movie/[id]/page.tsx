@@ -7,14 +7,16 @@ import { JsonLd } from "@/components/JsonLd";
 import { MediaRow } from "@/components/MediaRow";
 import { TitleHeader } from "@/components/TitleHeader";
 import { WhereToWatch } from "@/components/WhereToWatch";
+import { VideoPlayer } from "@/components/VideoPlayer"; // 👈 AJOUT
 import { AdSlot } from "@/components/ads/AdSlot";
 import { loadMovie } from "@/lib/data";
+import { img } from "@/lib/tmdb"; // 👈 AJOUT
 import { titlePath, watchPath } from "@/lib/routes";
 import { breadcrumbJsonLd, movieJsonLd, movieMetadata } from "@/lib/seo";
+import { resolveVideo } from "@/lib/video"; // 👈 AJOUT
 import { formatRuntime, parseIdParam, yearOf } from "@/lib/utils";
 import type { MediaSummary } from "@/lib/types";
 
-// Title pages are generated on first request, then cached (ISR, 24h).
 export const revalidate = 86400;
 export const dynamicParams = true;
 export const generateStaticParams = async () => [];
@@ -33,7 +35,6 @@ export default async function MoviePage({ params }: Props) {
   if (!id) notFound();
   const m = await loadMovie(id);
 
-  // One canonical URL per title: /movie/123 or /movie/123-old-slug → 308
   const canonical = titlePath("movie", m.id, m.title);
   if (`/movie/${raw}` !== canonical) permanentRedirect(canonical);
 
@@ -41,6 +42,9 @@ export default async function MoviePage({ params }: Props) {
   const pick = (job: string) => [...new Set(crew.filter((c) => c.job === job).map((c) => c.name))].slice(0, 3);
   const similar = (m.recommendations?.results.length ? m.recommendations.results : (m.similar?.results ?? []))
     .map((r) => ({ ...r, media_type: "movie" }) as MediaSummary);
+
+  // 👇 Génération de la vidéo pour l'intégrer à la page
+  const video = resolveVideo(m.videos, { tmdbId: m.id, type: "movie" });
 
   return (
     <article>
@@ -69,6 +73,19 @@ export default async function MoviePage({ params }: Props) {
           { label: "Writers", names: [...pick("Screenplay"), ...pick("Writer")].slice(0, 3) },
         ]}
       />
+
+      {/* 👇 LECTEUR INTÉGRÉ DIRECTEMENT ICI 👇 */}
+      <div className="container mt-8 mb-12">
+        <div className="mx-auto max-w-5xl">
+          <VideoPlayer
+            embedUrl={video.embedUrl}
+            externalUrl={video.externalUrl}
+            title={m.title}
+            poster={m.backdrop_path ? img(m.backdrop_path, "w1280") : null}
+            autoLoad={true}
+          />
+        </div>
+      </div>
 
       <div className="container mt-10 grid gap-10 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-10">
