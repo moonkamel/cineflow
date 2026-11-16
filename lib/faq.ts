@@ -6,7 +6,16 @@
 import type { FaqItem } from "@/components/Faq";
 import type { WatchProvider, WatchProviderRegion } from "./types";
 
-const names = (list?: WatchProvider[]) => [...new Set((list ?? []).map((p) => p.provider_name))];
+/** Provider names in TMDB's display order, minus "X Amazon Channel" add-on duplicates, capped for readability. */
+const names = (list?: WatchProvider[]) =>
+  [
+    ...new Set(
+      [...(list ?? [])]
+        .sort((a, b) => a.display_priority - b.display_priority)
+        .map((p) => p.provider_name)
+        .filter((n) => !/ (Amazon|Apple TV|Roku Premium) Channel$/i.test(n)),
+    ),
+  ].slice(0, 4);
 
 function joinNames(n: string[]): string {
   if (n.length <= 1) return n[0] ?? "";
