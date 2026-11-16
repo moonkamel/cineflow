@@ -20,8 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const m = await loadMovie(id);
   const year = yearOf(m.release_date);
   return pageMetadata({
-    title: `${m.title}${year ? ` (${year})` : ""} Official Trailer – Watch Now`,
-    description: truncate(`Watch the official ${m.title} trailer in HD and see where to stream the full movie in the US. ${m.overview}`, 158),
+    title: `Watch ${m.title}${year ? ` (${year})` : ""} Online Free – Full Movie HD`,
+    description: truncate(
+      `Watch ${m.title} online in HD. Stream the full movie now and see where to watch in the US. ${m.overview}`,
+      158,
+    ),
     path: watchPath("movie", m.id, m.title),
     image: img(m.backdrop_path, "w1280"),
     type: "video.movie",
@@ -43,7 +46,9 @@ export default async function WatchMoviePage({ params }: Props) {
 
   return (
     <>
-      {ld.trailer && <JsonLd data={{ "@context": "https://schema.org", ...ld.trailer }} />}
+      {ld.trailer && (
+        <JsonLd data={{ "@context": "https://schema.org", ...ld.trailer }} />
+      )}
       <WatchView
         title={m.title}
         year={yearOf(m.release_date)}
@@ -51,6 +56,7 @@ export default async function WatchMoviePage({ params }: Props) {
         backdrop={m.backdrop_path}
         detailsHref={titlePath("movie", m.id, m.title)}
         videos={m.videos}
+        videoMeta={{ tmdbId: m.id, type: "movie" }}
         providers={m["watch/providers"]?.results.US}
         related={related}
       />
