@@ -7,13 +7,12 @@ import { JsonLd } from "@/components/JsonLd";
 import { MediaRow } from "@/components/MediaRow";
 import { TitleHeader } from "@/components/TitleHeader";
 import { WhereToWatch } from "@/components/WhereToWatch";
-import { VideoPlayer } from "@/components/VideoPlayer";
+import { TVPlayer } from "@/components/TVPlayer"; // 👈 Nouvel import
 import { AdSlot } from "@/components/ads/AdSlot";
-import { loadTv } from "@/lib/data"; // Assure-toi que loadTv existe
+import { loadTv } from "@/lib/data";
 import { img } from "@/lib/tmdb";
 import { titlePath } from "@/lib/routes";
-import { breadcrumbJsonLd, tvJsonLd, pageMetadata } from "@/lib/seo"; // Adapte selon tes exports
-import { resolveVideo } from "@/lib/video";
+import { breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import { parseIdParam, yearOf, truncate } from "@/lib/utils";
 import type { MediaSummary } from "@/lib/types";
 
@@ -49,14 +48,6 @@ export default async function TvPage({ params }: Props) {
   const similar = (tv.recommendations?.results.length ? tv.recommendations.results : (tv.similar?.results ?? []))
     .map((r) => ({ ...r, media_type: "tv" }) as MediaSummary);
 
-  // 👇 VidSrc pour les séries : on charge la Saison 1, Épisode 1 par défaut
-  const video = resolveVideo(tv.videos, { 
-    tmdbId: tv.id, 
-    type: "tv", 
-    season: 1, 
-    episode: 1 
-  });
-
   return (
     <article>
       <JsonLd data={breadcrumbJsonLd([
@@ -75,19 +66,18 @@ export default async function TvPage({ params }: Props) {
         votes={tv.vote_count}
         genres={tv.genres}
         facts={[yearOf(tv.first_air_date), `${tv.number_of_seasons} Seasons`]}
-        watchHref="#player" // 👈 Pointe vers l'ancre
+        watchHref="#player"
         credits={[]}
       />
 
-      {/* 👇 LECTEUR INTÉGRÉ ET CENTRÉ 👇 */}
+      {/* 👇 INTÉGRATION DU NOUVEAU COMPOSANT TVPLAYER 👇 */}
       <div id="player" className="container mt-8">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-xl bg-black shadow-2xl">
-          <VideoPlayer
-            embedUrl={video.embedUrl}
-            externalUrl={video.externalUrl}
+        <div className="mx-auto max-w-5xl">
+          <TVPlayer
+            tvId={tv.id}
+            seasons={tv.seasons || []}
             title={tv.name}
-            poster={tv.backdrop_path ? img(tv.backdrop_path, "w1280") : null}
-            autoLoad={true}
+            backdrop={tv.backdrop_path}
           />
         </div>
       </div>
