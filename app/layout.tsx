@@ -12,6 +12,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
+  <meta name="google-site-verification" content="DfVrzZNW9_vzH9rwKPMThm4LQvSO9HyKN2pTBsBxDj4" />
   metadataBase: new URL(SITE_URL),
   title: { default: `${SITE_NAME} – Watch Trailers & Find Where to Stream Movies and TV Shows`, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
