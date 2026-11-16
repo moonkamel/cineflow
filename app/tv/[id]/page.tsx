@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Faq } from "@/components/Faq";
 import { titleFaq } from "@/lib/faq";
@@ -8,12 +7,14 @@ import { JsonLd } from "@/components/JsonLd";
 import { MediaRow } from "@/components/MediaRow";
 import { TitleHeader } from "@/components/TitleHeader";
 import { WhereToWatch } from "@/components/WhereToWatch";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { AdSlot } from "@/components/ads/AdSlot";
-import { loadTv } from "@/lib/data";
+import { loadTv } from "@/lib/data"; // Assure-toi que loadTv existe
 import { img } from "@/lib/tmdb";
-import { titlePath, watchPath } from "@/lib/routes";
-import { breadcrumbJsonLd, tvJsonLd, tvMetadata } from "@/lib/seo";
-import { formatRuntime, parseIdParam, yearOf } from "@/lib/utils";
+import { titlePath } from "@/lib/routes";
+import { breadcrumbJsonLd, tvJsonLd, pageMetadata } from "@/lib/seo"; // Adapte selon tes exports
+import { resolveVideo } from "@/lib/video";
+import { parseIdParam, yearOf, truncate } from "@/lib/utils";
 import type { MediaSummary } from "@/lib/types";
 
 export const revalidate = 86400;
@@ -25,82 +26,77 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = parseIdParam((await params).id);
   if (!id) return {};
-  return tvMetadata(await loadTv(id));
+  const tv = await loadTv(id);
+  const year = yearOf(tv.first_air_date);
+  return pageMetadata({
+    title: `${tv.name}${year ? ` (${year})` : ""} Official Trailer – Watch Now`,
+    description: truncate(`Watch the official ${tv.name} trailer in HD and see where to stream the full series in the US. ${tv.overview}`, 158),
+    path: titlePath("tv", tv.id, tv.name),
+    image: img(tv.backdrop_path, "w1280"),
+    type: "video.tv_show",
+  });
 }
 
 export default async function TvPage({ params }: Props) {
   const raw = (await params).id;
   const id = parseIdParam(raw);
   if (!id) notFound();
-  const s = await loadTv(id);
+  const tv = await loadTv(id);
 
-  const canonical = titlePath("tv", s.id, s.name);
+  const canonical = titlePath("tv", tv.id, tv.name);
   if (`/tv/${raw}` !== canonical) permanentRedirect(canonical);
 
-  const startYear = yearOf(s.first_air_date);
-  const endYear = s.status === "Ended" ? yearOf(s.last_air_date) : null;
-  const seasons = s.seasons.filter((x) => x.season_number > 0);
-  const similar = (s.recommendations?.results.length ? s.recommendations.results : (s.similar?.results ?? []))
+  const similar = (tv.recommendations?.results.length ? tv.recommendations.results : (tv.similar?.results ?? []))
     .map((r) => ({ ...r, media_type: "tv" }) as MediaSummary);
+
+  // 👇 VidSrc pour les séries : on charge la Saison 1, Épisode 1 par défaut
+  const video = resolveVideo(tv.videos, { 
+    tmdbId: tv.id, 
+    type: "tv", 
+    season: 1, 
+    episode: 1 
+  });
 
   return (
     <article>
-      <JsonLd data={tvJsonLd(s)} />
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "TV Shows", path: "/tv-shows" },
-          { name: s.name, path: canonical },
-        ])}
-      />
+      <JsonLd data={breadcrumbJsonLd([
+        { name: "Home", path: "/" },
+        { name: "TV Shows", path: "/tv" },
+        { name: tv.name, path: canonical },
+      ])} />
 
       <TitleHeader
-        title={s.name}
-        tagline={s.tagline}
-        overview={s.overview}
-        backdrop={s.backdrop_path}
-        poster={s.poster_path}
-        rating={s.vote_average}
-        votes={s.vote_count}
-        genres={s.genres}
-        facts={[
-          startYear && (endYear && endYear !== startYear ? `${startYear}–${endYear}` : startYear),
-          `${s.number_of_seasons} Season${s.number_of_seasons === 1 ? "" : "s"}`,
-          `${s.number_of_episodes} Episodes`,
-          formatRuntime(s.episode_run_time[0]),
-        ]}
-        watchHref={watchPath("tv", s.id, s.name)}
-        credits={[{ label: "Created by", names: s.created_by.map((c) => c.name) }]}
+        title={tv.name}
+        tagline={tv.tagline}
+        overview={tv.overview}
+        backdrop={tv.backdrop_path}
+        poster={tv.poster_path}
+        rating={tv.vote_average}
+        votes={tv.vote_count}
+        genres={tv.genres}
+        facts={[yearOf(tv.first_air_date), `${tv.number_of_seasons} Seasons`]}
+        watchHref="#player" // 👈 Pointe vers l'ancre
+        credits={[]}
       />
+
+      {/* 👇 LECTEUR INTÉGRÉ ET CENTRÉ 👇 */}
+      <div id="player" className="container mt-8">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-xl bg-black shadow-2xl">
+          <VideoPlayer
+            embedUrl={video.embedUrl}
+            externalUrl={video.externalUrl}
+            title={tv.name}
+            poster={tv.backdrop_path ? img(tv.backdrop_path, "w1280") : null}
+            autoLoad={true}
+          />
+        </div>
+      </div>
 
       <div className="container mt-10 grid gap-10 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-10">
-          {seasons.length > 0 && (
-            <section aria-labelledby="seasons-heading">
-              <h2 id="seasons-heading" className="mb-4 text-xl font-bold">
-                Seasons
-              </h2>
-              <ul className="no-scrollbar flex snap-x gap-3 overflow-x-auto pb-2">
-                {seasons.map((x) => {
-                  const p = img(x.poster_path, "w185");
-                  return (
-                    <li key={x.id} className="w-32 shrink-0 snap-start">
-                      <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-card">
-                        {p && <Image src={p} alt={`${s.name} ${x.name} poster`} fill sizes="128px" className="object-cover" />}
-                      </div>
-                      <p className="mt-2 text-sm font-medium">{x.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {x.episode_count} episodes{x.air_date ? ` · ${yearOf(x.air_date)}` : ""}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          )}
-          <CastList cast={s.credits?.cast ?? []} />
-          <WhereToWatch region={s["watch/providers"]?.results.US} title={s.name} />
-          <Faq items={titleFaq(s.name, "show", s["watch/providers"]?.results.US, s.number_of_seasons)} />
+          <CastList cast={tv.credits?.cast ?? []} />
+          <WhereToWatch region={tv["watch/providers"]?.results.US} title={tv.name} />
+          <Faq items={titleFaq(tv.name, "tv", tv["watch/providers"]?.results.US)} />
         </div>
         <aside className="space-y-6">
           <AdSlot format="300x250" />
@@ -108,7 +104,7 @@ export default async function TvPage({ params }: Props) {
       </div>
 
       <div className="mt-12">
-        <MediaRow title={`Shows Like ${s.name}`} items={similar} />
+        <MediaRow title={`Shows Like ${tv.name}`} items={similar} />
       </div>
     </article>
   );
