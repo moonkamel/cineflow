@@ -9,50 +9,65 @@ export interface ResolvedVideo {
 }
 
 /**
- * Construit l'URL d'intégration VidSrc.
- * @param tmdbId L'ID TMDB du film ou de la série.
- * @param type "movie" ou "tv".
- * @param season (Optionnel) Saison pour une série.
- * @param episode (Optionnel) Épisode pour une série.
+ * Métadonnées nécessaires pour construire une URL VidSrc.
  */
-function getVidSrcUrl(
-  tmdbId: string | number,
-  type: "movie" | "tv",
-  season?: number,
-  episode?: number
-): string {
-  const base = `https://vidsrc.su/embed/${type}/${tmdbId}`;
-  if (type === "tv" && season && episode) {
-    return `${base}/${season}/${episode}`;
-  }
-  return base;
+export interface VideoMeta {
+  tmdbId: string | number;
+  type: "movie" | "tv";
+  season?: number;
+  episode?: number;
 }
 
+/**
+ * Construit l'URL d'intégration VidSrc pour un film ou une série.
+ *
+ * Formats supportés par vidsrc.su :
+ * - Film  : https://vidsrc.su/embed/movie/{tmdbId}
+ * - Série : https://vidsrc.su/embed/tv/{tmdbId}/{season}/{episode}
+ * - Série (sans épisode précis) : https://vidsrc.su/embed/tv/{tmdbId}
+ */
+function getVidSrcUrl(meta: VideoMeta): string {
+  const { tmdbId, type, season, episode } = meta;
+
+  if (type === "tv") {
+    if (season != null && episode != null) {
+      return `https://vidsrc.su/embed/tv/${tmdbId}/${season}/${episode}`;
+    }
+    return `https://vidsrc.su/embed/tv/${tmdbId}`;
+  }
+
+  return `https://vidsrc.su/embed/movie/${tmdbId}`;
+}
+
+/**
+ * Résout la source vidéo à afficher pour un titre donné.
+ *
+ * - Si les métadonnées TMDB sont fournies → iframe VidSrc (streaming).
+ * - Sinon → bande-annonce YouTube via les vidéos TMDB.
+ */
 export function resolveVideo(
   videos?: { results: Video[] },
-  // Ajout de paramètres optionnels pour VidSrc
-  meta?: {
-    tmdbId: string | number;
-    type: "movie" | "tv";
-    season?: number;
-    episode?: number;
-  }
+  meta?: VideoMeta,
 ): ResolvedVideo {
-  // 1. Priorité à VidSrc si les métadonnées sont fournies
-  if (meta?.tmdbId) {
-    const vidSrcUrl = getVidSrcUrl(meta.tmdbId, meta.type, meta.season, meta.episode);
+  // 1. Priorité au streaming VidSrc
+  if (meta && meta.tmdbId != null) {
+    const embedUrl = getVidSrcUrl(meta);
     return {
-      embedUrl: vidSrcUrl,
-      label: "Stream", // ou "Watch Now"
+      embedUrl,
+      externalUrl: embedUrl,
+      label: "Stream",
     };
   }
 
-  // 2. Fallback sur la bande-annonce YouTube (comportement actuel)
-  const t = pickTrailer(videos);
-  if (!t) return { embedUrl: null, label: "Trailer" };
+  // 2. Fallback : bande-annonce YouTube
+  const trailer = pickTrailer(videos);
+  if (!trailer) {
+    return { embedUrl: null, label: "Trailer" };
+  }
+
   return {
-    embedUrl: `https://www.youtube-nocookie.com/embed/${t.key}`,
-    externalUrl: `https://www.youtube.com/watch?v=${t.key}`,
-    label: t.type,
+    embedUrl: `https://www.youtube-nocookie.com/embed/${trailer.key}`,
+    externalUrl: `https://www.youtube.com/watch?v=${trailer.key}`,
+    label: trailer.type,
   };
 }
