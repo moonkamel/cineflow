@@ -7,13 +7,13 @@ import { JsonLd } from "@/components/JsonLd";
 import { MediaRow } from "@/components/MediaRow";
 import { TitleHeader } from "@/components/TitleHeader";
 import { WhereToWatch } from "@/components/WhereToWatch";
-import { VideoPlayer } from "@/components/VideoPlayer"; // 👈 AJOUT
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { loadMovie } from "@/lib/data";
-import { img } from "@/lib/tmdb"; // 👈 AJOUT
-import { titlePath, watchPath } from "@/lib/routes";
+import { img } from "@/lib/tmdb";
+import { titlePath } from "@/lib/routes";
 import { breadcrumbJsonLd, movieJsonLd, movieMetadata } from "@/lib/seo";
-import { resolveVideo } from "@/lib/video"; // 👈 AJOUT
+import { resolveVideo } from "@/lib/video";
 import { formatRuntime, parseIdParam, yearOf } from "@/lib/utils";
 import type { MediaSummary } from "@/lib/types";
 
@@ -43,7 +43,6 @@ export default async function MoviePage({ params }: Props) {
   const similar = (m.recommendations?.results.length ? m.recommendations.results : (m.similar?.results ?? []))
     .map((r) => ({ ...r, media_type: "movie" }) as MediaSummary);
 
-  // 👇 Génération de la vidéo pour l'intégrer à la page
   const video = resolveVideo(m.videos, { tmdbId: m.id, type: "movie" });
 
   return (
@@ -67,16 +66,16 @@ export default async function MoviePage({ params }: Props) {
         votes={m.vote_count}
         genres={m.genres}
         facts={[yearOf(m.release_date), formatRuntime(m.runtime), m.status !== "Released" ? m.status : null]}
-        watchHref={watchPath("movie", m.id, m.title)}
+        watchHref="#player" // 👈 Pointe vers l'ancre du lecteur
         credits={[
           { label: "Director", names: pick("Director") },
           { label: "Writers", names: [...pick("Screenplay"), ...pick("Writer")].slice(0, 3) },
         ]}
       />
 
-      {/* 👇 LECTEUR INTÉGRÉ DIRECTEMENT ICI 👇 */}
-      <div className="container mt-8 mb-12">
-        <div className="mx-auto max-w-5xl">
+      {/* 👇 LECTEUR INTÉGRÉ ET CENTRÉ 👇 */}
+      <div id="player" className="container mt-8">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-xl bg-black shadow-2xl">
           <VideoPlayer
             embedUrl={video.embedUrl}
             externalUrl={video.externalUrl}
