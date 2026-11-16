@@ -15,6 +15,8 @@ import {
   withType,
 } from "@/lib/tmdb";
 import type { MediaSummary, Paged } from "@/lib/types";
+import { getCollection } from "@/lib/collections";
+import { loadCollectionItems } from "@/lib/collection-data";
 
 // ISR: the HTML is regenerated at most hourly, served stale-while-revalidate.
 export const revalidate = 3600;
@@ -23,6 +25,13 @@ export const revalidate = 3600;
 async function Row({ title, load, href }: { title: string; load: () => Promise<Paged<MediaSummary>>; href?: string }) {
   const data = await safe(load(), EMPTY_PAGE);
   return <MediaRow title={title} items={data.results} href={href} />;
+}
+
+async function CollectionRow({ slug, title }: { slug: string; title: string }) {
+  const c = getCollection(slug);
+  if (!c) return null;
+  const items = await loadCollectionItems(c, 1);
+  return <MediaRow title={title} items={items} href={`/collection/${slug}`} />;
 }
 
 export default async function HomePage() {
@@ -35,6 +44,13 @@ export default async function HomePage() {
 
       <div className="relative z-10 -mt-12 space-y-6 md:-mt-24">
         <MediaRow title="Trending Today" items={trending.results.slice(1)} />
+
+        <Suspense fallback={<RowSkeleton />}>
+          <CollectionRow slug="best-christmas-movies" title="Christmas Classics" />
+        </Suspense>
+        <Suspense fallback={<RowSkeleton />}>
+          <CollectionRow slug="best-free-movies-on-tubi" title="Watch Free: Best of Tubi" />
+        </Suspense>
 
         <Suspense fallback={<RowSkeleton />}>
           <Row title="Trending This Week" load={() => getTrending("week")} />
@@ -67,7 +83,7 @@ export default async function HomePage() {
         <Suspense fallback={<RowSkeleton />}>
           <Row
             title="Sci-Fi Hits"
-            href="/collection/best-sci-fi-fantasy-tv-shows"
+            href="/collection/best-sci-fi-movies-2025"
             load={() => discover("movie", { with_genres: "878", "vote_count.gte": 500 })}
           />
         </Suspense>

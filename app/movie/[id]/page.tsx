@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
+import { Faq } from "@/components/Faq";
+import { titleFaq } from "@/lib/faq";
 import { CastList } from "@/components/CastList";
 import { JsonLd } from "@/components/JsonLd";
 import { MediaRow } from "@/components/MediaRow";
@@ -72,6 +74,7 @@ export default async function MoviePage({ params }: Props) {
         <div className="min-w-0 space-y-10">
           <CastList cast={m.credits?.cast ?? []} />
           <WhereToWatch region={m["watch/providers"]?.results.US} title={m.title} />
+          <Faq items={titleFaq(m.title, "movie", m["watch/providers"]?.results.US)} />
         </div>
         <aside className="space-y-6">
           <AdSlot format="300x250" />

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { COLLECTIONS } from "@/lib/collections";
+import { collectionsIn } from "@/lib/collections";
 import { SITE_NAME } from "@/lib/site";
 
 export function Footer() {
@@ -13,13 +13,23 @@ export function Footer() {
         <div>
           <p className="mb-2 font-semibold text-foreground">What to watch</p>
           <ul className="space-y-1">
-            {COLLECTIONS.map((c) => (
+            {[...collectionsIn("seasonal"), ...collectionsIn("platform")].map((c) => (
               <li key={c.slug}>
                 <Link href={`/collection/${c.slug}`} className="hover:text-foreground">
                   {c.title}
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href="/free-movies" className="hover:text-foreground">
+                Free Movies Online
+              </Link>
+            </li>
+            <li>
+              <Link href="/free-streaming-sites" className="hover:text-foreground">
+                Best Free Streaming Sites
+              </Link>
+            </li>
           </ul>
         </div>
         <div className="space-y-2">

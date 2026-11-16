@@ -8,7 +8,7 @@ import { COLLECTIONS, getCollection } from "@/lib/collections";
 import { absoluteUrl } from "@/lib/site";
 import { pathFor } from "@/lib/routes";
 import { pageMetadata, breadcrumbJsonLd } from "@/lib/seo";
-import { discover, EMPTY_PAGE, safe } from "@/lib/tmdb";
+import { loadCollectionItems } from "@/lib/collection-data";
 import { titleOf } from "@/lib/types";
 
 export const revalidate = 86400;
@@ -27,11 +27,7 @@ export default async function CollectionPage({ params }: Props) {
   const c = getCollection((await params).slug);
   if (!c) notFound();
 
-  const [p1, p2] = await Promise.all([
-    safe(discover(c.type, c.filters), EMPTY_PAGE),
-    safe(discover(c.type, { ...c.filters, page: 2 }), EMPTY_PAGE),
-  ]);
-  const items = [...p1.results, ...p2.results].filter((m) => m.poster_path);
+  const items = await loadCollectionItems(c);
 
   // ItemList → eligible for Google's carousel rich result
   const itemList = {
@@ -65,6 +61,16 @@ export default async function CollectionPage({ params }: Props) {
           </p>
         ))}
       </header>
+
+      {c.section === "free" || c.slug.startsWith("free-") ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          All titles are available free on legal, ad-supported US services.{" "}
+          <Link href="/free-streaming-sites" className="underline hover:text-foreground">
+            See the best free streaming sites
+          </Link>
+          .
+        </p>
+      ) : null}
 
       <div className="mt-8">
         {items.length ? <MediaGrid items={items.slice(0, 18)} /> : <p className="text-muted-foreground">This list is updating — check back shortly.</p>}

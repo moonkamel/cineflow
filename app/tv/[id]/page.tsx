@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
+import { Faq } from "@/components/Faq";
+import { titleFaq } from "@/lib/faq";
 import { CastList } from "@/components/CastList";
 import { JsonLd } from "@/components/JsonLd";
 import { MediaRow } from "@/components/MediaRow";
@@ -98,6 +100,7 @@ export default async function TvPage({ params }: Props) {
           )}
           <CastList cast={s.credits?.cast ?? []} />
           <WhereToWatch region={s["watch/providers"]?.results.US} title={s.name} />
+          <Faq items={titleFaq(s.name, "show", s["watch/providers"]?.results.US, s.number_of_seasons)} />
         </div>
         <aside className="space-y-6">
           <AdSlot format="300x250" />

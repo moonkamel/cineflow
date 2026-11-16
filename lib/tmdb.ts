@@ -156,6 +156,11 @@ export interface DiscoverFilters {
   "vote_count.gte"?: number;
   year?: number; // movie: primary_release_year, tv: first_air_date_year
   with_original_language?: string;
+  /** Pipe = OR, comma = AND. US provider ids: see PROVIDERS in lib/collections.ts */
+  with_watch_providers?: string;
+  /** "flatrate" | "free" | "ads" | "rent" | "buy", pipe-separated */
+  with_watch_monetization_types?: string;
+  with_keywords?: string;
   page?: number;
 }
 
@@ -182,3 +187,13 @@ export const withType = <T extends MediaSummary>(type: MediaType, page: Paged<T>
   ...page,
   results: page.results.map((r) => ({ ...r, media_type: type }) as MediaSummary),
 });
+
+/**
+ * Resolve a TMDB keyword name ("christmas") to its id. Done at runtime so we
+ * never hard-code ids that could drift; cached for a week.
+ */
+export async function resolveKeywordId(name: string): Promise<number | null> {
+  const res = await tmdb<Paged<{ id: number; name: string }>>(`/search/keyword`, { query: name }, { revalidate: TTL.genres });
+  const exact = res.results.find((k) => k.name.toLowerCase() === name.toLowerCase());
+  return (exact ?? res.results[0])?.id ?? null;
+}

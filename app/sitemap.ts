@@ -42,13 +42,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/movies"), lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: absoluteUrl("/tv-shows"), lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: absoluteUrl("/collections"), lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: absoluteUrl("/free-movies"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
+    { url: absoluteUrl("/free-streaming-sites"), lastModified: now, changeFrequency: "monthly", priority: 0.8 },
   ];
 
   const collections: MetadataRoute.Sitemap = COLLECTIONS.map((c) => ({
     url: absoluteUrl(`/collection/${c.slug}`),
     lastModified: now,
-    changeFrequency: "weekly",
-    priority: 0.8,
+    changeFrequency: c.section === "genre" ? "weekly" : "daily",
+    priority: c.section === "seasonal" || c.section === "free" ? 0.9 : 0.8,
   }));
 
   const titles: MetadataRoute.Sitemap = (await collect()).map((m) => {
