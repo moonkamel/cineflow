@@ -63,11 +63,11 @@ export function TitleHeader({ title, tagline, overview, backdrop, poster, facts,
             ))}
           </ul>
 
-          <div className="mt-6">
-            <Link href={watchHref} className={buttonClass("default", "lg", "w-full sm:w-auto")}>
-              <Play className="fill-current" /> Play Trailer
-            </Link>
-          </div>
+        <div className="mt-6">
+          <Link href={watchHref} className={buttonClass("default", "lg", "w-full sm:w-auto")}>
+            <Play className="fill-current" /> Watch Now
+          </Link>
+        </div>
 
           <h2 className="sr-only">Overview</h2>
           <p className="mt-6 leading-relaxed text-white/90">{overview || "No overview available yet."}</p>
