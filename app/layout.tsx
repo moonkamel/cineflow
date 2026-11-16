@@ -12,14 +12,15 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  <meta name="google-site-verification" content="DfVrzZNW9_vzH9rwKPMThm4LQvSO9HyKN2pTBsBxDj4" />
   metadataBase: new URL(SITE_URL),
   title: { default: `${SITE_NAME} – Watch Trailers & Find Where to Stream Movies and TV Shows`, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   openGraph: { siteName: SITE_NAME, locale: "en_US", type: "website" },
   twitter: { card: "summary_large_image" },
-  verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,
+  verification: {
+  google: "DfVrzZNW9_vzH9rwKPMThm4LQvSO9HyKN2pTBsBxDj4",
+},
   formatDetection: { telephone: false },
 };
 
