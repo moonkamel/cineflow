@@ -14,7 +14,7 @@ type Props = {
   backdrop?: string | null;
   detailsHref: string;
   videos?: { results: Video[] };
-  videoMeta?: VideoMeta;          // 👈 ajout
+  videoMeta?: VideoMeta;
   providers?: WatchProviderRegion;
   related?: MediaSummary[];
 };
@@ -30,7 +30,7 @@ export function WatchView({
   providers,
   related,
 }: Props) {
-  const video = resolveVideo(videos, videoMeta); // 👈 VidSrc activé si videoMeta est fourni
+  const video = resolveVideo(videos, videoMeta);
 
   return (
     <div className="container py-6">
@@ -39,6 +39,7 @@ export function WatchView({
           embedUrl={video.embedUrl}
           externalUrl={video.externalUrl}
           title={title}
+          poster={backdrop ?? null}
         />
       </div>
 
